@@ -1,17 +1,29 @@
-# Usamos una imagen base ligera de Python
+# Usa una imagen base de Python
 FROM python:3.10-slim
+
+# Instalar bibliotecas gráficas necesarias para OpenCV
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        libgl1-mesa-dev \
+        libglib2.0-0 \
+        libsm6 \
+        libxext6 \
+        libxrender-dev \
+        libxcursor1 \
+        libxi6 \
+        libxtst6
 
 # Directorio de trabajo dentro del contenedor
 WORKDIR /app
 
-# Copiamos los archivos necesarios
+# Copiar los archivos necesarios
 COPY requirements.txt .
 COPY . .
 
-# Instalamos dependencias
+# Instalar dependencias
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Exponemos el puerto donde correrá la API
+# Exponer el puerto donde correrá la API
 EXPOSE 8000
 
 # Comando para ejecutar la aplicación
