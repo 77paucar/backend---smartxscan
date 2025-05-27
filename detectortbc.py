@@ -14,7 +14,6 @@ PENETRACION_OPTIMA_MIN = 80
 PENETRACION_OPTIMA_MAX = 160
 CONTRASTE_MINIMO = 40
 
-
 class DetectorTBC:
     def __init__(self):
         try:
@@ -31,36 +30,44 @@ class DetectorTBC:
         p50 = np.percentile(img_gris, 50)
         p95 = np.percentile(img_gris, 95)
         contraste = p95 - p5
+        rango_dinamico = (p5, p95)
 
         if p50 < PENETRACION_OPTIMA_MIN:
             clasificacion = "INSUFICIENTE"
             problema = "IMAGEN DEMASIADO CLARA"
+            recomendacion = "Repetir estudio con técnica adecuada: Reducir exposición"
         elif p50 > PENETRACION_OPTIMA_MAX:
             clasificacion = "EXCESIVA"
             problema = "IMAGEN DEMASIADO OSCURA"
+            recomendacion = "Repetir estudio con técnica adecuada: Reducir exposición"
         else:
             clasificacion = "ÓPTIMA"
             problema = "Rango óptimo de penetración"
+            recomendacion = "No requiere repetición"
 
         if contraste < CONTRASTE_MINIMO and clasificacion == "ÓPTIMA":
             clasificacion = "CONTRASTE BAJO"
             problema += " - Contraste insuficiente"
+            recomendacion = "Repetir estudio con técnica adecuada: Mejorar contraste"
 
         return {
             "clasificacion": clasificacion,
             "problema": problema,
             "penetracion": float(p50),
             "contraste": float(contraste),
+            "intensidad_media": float(np.mean(img_gris)),
+            "rango_dinamico": {"oscuros": float(p5), "claros": float(p95)},
+            "recomendacion": recomendacion
         }
 
     def predecir(self, image_data):
         try:
-            # Abrir desde bytes
+            # Preparar imagen RGB
             img = Image.open(image_data).convert('RGB').resize(TAMANO_IMAGEN)
             img_array = img_to_array(img) / 255.0
             img_array = np.expand_dims(img_array, axis=0)
 
-            # Modelo 1: ¿Es radiografía?
+            # Modelo 1: Verificar si es radiografía
             es_radiografia = self.modelo1.predict(img_array, verbose=0)[0]
             if np.argmax(es_radiografia) == 0:
                 return {
@@ -73,29 +80,53 @@ class DetectorTBC:
             pred = self.modelo2.predict(img_array, verbose=0)[0]
             prob_tb, prob_normal, prob_baja = pred
 
-            # Análisis técnico
-            img = Image.open(image_data).convert('L')  # Escala de grises
+            # Imagen en escala de grises
+            img = Image.open(image_data).convert('L')
             img_gris_np = np.array(img)
+
+            # Análisis técnico de calidad
             calidad = self._analizar_penetracion(img_gris_np)
 
-            # Diagnóstico final
-            if prob_baja > 0.5 or calidad["clasificacion"] != "ÓPTIMA":
-                diagnostico = "BajaCalidad"
-                mostrar_prob = {"Tuberculosis": float(prob_tb)}
-            elif prob_tb > 0.5:
-                diagnostico = "Tuberculosis"
-                mostrar_prob = {"Tuberculosis": float(prob_tb)}
-            else:
-                diagnostico = "Normal"
-                mostrar_prob = {"Normal": float(prob_normal)}
+            # Diagnóstico técnico
+            diagnostico_tecnico = "IMAGEN DEMASIADO CLARA" if calidad["clasificacion"] == "INSUFICIENTE" else \
+                                   "IMAGEN DEMASIADO OSCURA" if calidad["clasificacion"] == "EXCESIVA" else \
+                                   "IMAGEN CON CONTRASTE BAJO" if calidad["clasificacion"] == "CONTRASTE BAJO" else \
+                                   "IMAGEN ÓPTIMA"
 
-            return {
-                "diagnostico": diagnostico,
-                "confianza": float(np.max(pred)),
-                "probabilidades": mostrar_prob,
-                "calidad": calidad,
+            # Diagnóstico final y recomendación
+            if prob_baja > 0.5 or calidad["clasificacion"] != "ÓPTIMA":
+                diagnostico_final = "BajaCalidad"
+                probabilidad = prob_tb
+                recomendacion_clinica = (
+                    "PRECAUCIÓN: No descartar TB solo por calidad de imagen"
+                )
+            elif prob_tb > 0.5:
+                diagnostico_final = "Tuberculosis"
+                probabilidad = prob_tb
+                recomendacion_clinica = "Continuar con protocolo diagnóstico para TB"
+            else:
+                diagnostico_final = "Normal"
+                probabilidad = prob_normal
+                recomendacion_clinica = "No hay hallazgos patológicos relevantes"
+
+            # Formato final tipo reporte
+            reporte = {
+                "diagnostico": f"{diagnostico_final}",
+                "probabilidad_tb": round(float(prob_tb) * 100, 2),
+                "confianza": round(float(np.max(pred)) * 100, 2),
+                "hallazgos_tecnicos": {
+                    "intensidad_media": calidad["intensidad_media"],
+                    "contraste": calidad["contraste"],
+                    "rango_dinamico": calidad["rango_dinamico"],
+                    "diagnostico_tecnico": diagnostico_tecnico,
+                    "posible_causa": calidad["problema"],
+                    "consecuencia": "Pérdida de detalles diagnósticos" if calidad["clasificacion"] != "ÓPTIMA" else "Óptima calidad diagnóstica"
+                },
+                "recomendacion_clinica": recomendacion_clinica,
                 "es_radiografia": True
             }
+
+            return reporte
 
         except Exception as e:
             return {"error": str(e)}
