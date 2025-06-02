@@ -4,12 +4,12 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import img_to_array
 import cv2
 import os
+import time  # Para medir el tiempo
 
 MODELO1_PATH = "modelo1_radiografias_vs_otros.h5"
 MODELO2_PATH = "modelo2_clasificador_tb.h5"
 TAMANO_IMAGEN = (224, 224)
 
-# Umbrales mejorados para calidad de imagen
 PENETRACION_OPTIMA_MIN = 80
 PENETRACION_OPTIMA_MAX = 160
 CONTRASTE_MINIMO = 40
@@ -62,6 +62,9 @@ class DetectorTBC:
 
     def predecir(self, image_data):
         try:
+            # Inicia la medición de tiempo
+            tiempo_inicio = time.time()
+
             # Preparar imagen RGB
             img = Image.open(image_data).convert('RGB').resize(TAMANO_IMAGEN)
             img_array = img_to_array(img) / 255.0
@@ -70,10 +73,13 @@ class DetectorTBC:
             # Modelo 1: Verificar si es radiografía
             es_radiografia = self.modelo1.predict(img_array, verbose=0)[0]
             if np.argmax(es_radiografia) == 0:
+                tiempo_fin = time.time()
+                tiempo_total = tiempo_fin - tiempo_inicio
                 return {
                     "diagnostico": "NoRadiografia",
                     "confianza": float(np.max(es_radiografia)),
-                    "detalle": "No es una radiografía"
+                    "detalle": "No es una radiografía",
+                    "tiempo_de_espera": round(tiempo_total, 1)  # en segundos
                 }
 
             # Modelo 2: Clasificación médica
@@ -97,9 +103,7 @@ class DetectorTBC:
             if prob_baja > 0.5 or calidad["clasificacion"] != "ÓPTIMA":
                 diagnostico_final = "BajaCalidad"
                 probabilidad = prob_tb
-                recomendacion_clinica = (
-                    "PRECAUCIÓN: No descartar TB solo por calidad de imagen"
-                )
+                recomendacion_clinica = "PRECAUCIÓN: No descartar TB solo por calidad de imagen"
             elif prob_tb > 0.5:
                 diagnostico_final = "Tuberculosis"
                 probabilidad = prob_tb
@@ -108,6 +112,10 @@ class DetectorTBC:
                 diagnostico_final = "Normal"
                 probabilidad = prob_normal
                 recomendacion_clinica = "No hay hallazgos patológicos relevantes"
+
+            # Finaliza la medición de tiempo
+            tiempo_fin = time.time()
+            tiempo_total = tiempo_fin - tiempo_inicio
 
             # Formato final tipo reporte
             reporte = {
@@ -123,10 +131,11 @@ class DetectorTBC:
                     "consecuencia": "Pérdida de detalles diagnósticos" if calidad["clasificacion"] != "ÓPTIMA" else "Óptima calidad diagnóstica"
                 },
                 "recomendacion_clinica": recomendacion_clinica,
-                "es_radiografia": True
+                "es_radiografia": True,
+                "tiempo_de_espera": round(tiempo_total, 1)  # en segundos
             }
 
             return reporte
 
         except Exception as e:
-            return {"error": str(e)}
+            return {"error": str(e)}    
