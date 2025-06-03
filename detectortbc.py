@@ -2,7 +2,7 @@ import numpy as np
 from PIL import Image
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import img_to_array
-import cv2
+
 import os
 import time  # Para medir el tiempo
 
