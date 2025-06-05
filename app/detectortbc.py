@@ -6,13 +6,14 @@ from tensorflow.keras.preprocessing.image import img_to_array
 import os
 import time  # Para medir el tiempo
 
-MODELO1_PATH = "modelo1_radiografias_vs_otros.h5"
-MODELO2_PATH = "modelo2_clasificador_tb.h5"
+MODELO1_PATH = "modelos/modelo1_radiografias_vs_otros.h5"
+MODELO2_PATH = "modelos/modelo2_clasificador_tb.h5"
 TAMANO_IMAGEN = (224, 224)
 
 PENETRACION_OPTIMA_MIN = 80
 PENETRACION_OPTIMA_MAX = 160
 CONTRASTE_MINIMO = 40
+
 
 class DetectorTBC:
     def __init__(self):
@@ -24,6 +25,7 @@ class DetectorTBC:
         except Exception as e:
             print(f"[ERROR] No se pudo cargar los modelos: {str(e)}")
             raise
+
 
     def _analizar_penetracion(self, img_gris):
         p5 = np.percentile(img_gris, 5)

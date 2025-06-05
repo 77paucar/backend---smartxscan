@@ -6,7 +6,11 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import EarlyStopping
 
 # Ruta base
-RUTA_BASE = "D:/no borrar/UPAO/ING SISTEMAS/9no ciclo/TESIS 1/prueba de back/TB_Chest_Radiography_Database"
+RUTA_BASE = os.environ.get("DATOS_PATH", "./datos/TB_Chest_Radiography_Database")
+
+if not os.path.isdir(RUTA_BASE):
+    raise FileNotFoundError(f"No se encontró la carpeta de datos en: {RUTA_BASE}")
+
 
 # Función para crear modelo CNN
 def crear_modelo(num_clases):
@@ -130,6 +134,7 @@ def entrenar_modelo2_radiografias_tb():
               callbacks=[EarlyStopping(patience=3, restore_best_weights=True)])
     model.save("modelo2_clasificador_tb.h5")
     print("Modelo 2 guardado.")
+
 
 if __name__ == "__main__":
     entrenar_modelo1_radiografias_vs_otras()

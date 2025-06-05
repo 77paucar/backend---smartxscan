@@ -1,30 +1,33 @@
-# Usa una imagen base de Python
-FROM python:3.10-slim
+FROM python:3.10-slim AS builder
 
-# Instalar bibliotecas gráficas necesarias para OpenCV
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        libgl1-mesa-dev \
-        libglib2.0-0 \
-        libsm6 \
-        libxext6 \
-        libxrender-dev \
-        libxcursor1 \
-        libxi6 \
-        libxtst6
+ENV PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    TZ=America/Lima
 
-# Directorio de trabajo dentro del contenedor
 WORKDIR /app
 
-# Copiar los archivos necesarios
-COPY requirements.txt .
-COPY . .
+COPY requirements.txt /app/requirements.txt
 
-# Instalar dependencias
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip \
+    && pip install --no-cache-dir -r requirements.txt
 
-# Exponer el puerto donde correrá la API
+COPY app/ /app/app/
+
+FROM python:3.10-slim
+
+RUN useradd --create-home apiuser
+
+ENV DATOS_PATH="/app/datos/TB_Chest_Radiography_Database" \
+    MODEL_OUT="/app/app/modelos"
+
+WORKDIR /app
+
+COPY --from=builder /usr/local/lib/python3.10/site-packages/ /usr/local/lib/python3.10/site-packages/
+COPY --from=builder /app/app/ /app/app/
+
+USER apiuser
+
 EXPOSE 8000
 
-# Comando para ejecutar la aplicación
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
