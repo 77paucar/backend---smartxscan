@@ -40,6 +40,12 @@ async def analizar_imagen(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al procesar la imagen: {str(e)}")
 
+
 @app.get("/")
 def read_root():
     return {"Hello": "World"}
+
+
+@app.get("/health-check")
+def health_check():
+    return {"status": "ok"}
