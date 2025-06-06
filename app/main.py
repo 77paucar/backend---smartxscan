@@ -1,7 +1,7 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
 from io import BytesIO
-from detectortbc import DetectorTBC
+from app.detectortbc import DetectorTBC
 
 app = FastAPI()
 detector = DetectorTBC()
