@@ -1,9 +1,25 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from io import BytesIO
 from app.detectortbc import DetectorTBC
 
 app = FastAPI()
+
+origins = [
+    "http://localhost:4200",
+    "http://54.198.254.35",
+    "http://ec2-54-198-254-35.compute-1.amazonaws.com"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 detector = DetectorTBC()
 
 @app.post("/upload-image/")
