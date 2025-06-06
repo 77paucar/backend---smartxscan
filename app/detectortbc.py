@@ -1,11 +1,12 @@
 import numpy as np
+import requests
 from PIL import Image
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import img_to_array
 
 import os
-import time  # Para medir el tiempo
 import tempfile
+import time
 import urllib.parse
 
 # MODELO1_PATH = os.path.join(os.path.dirname(__file__), "modelos", "modelo1_radiografias_vs_otros.h5")
