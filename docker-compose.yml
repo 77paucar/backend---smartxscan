@@ -21,7 +21,7 @@ services:
     image: detector_tbc_api
     container_name: detector_tbc_api
     ports:
-      - "8000:8000"
+      - "80:80"
     volumes:
       - ./app/modelos:/app/app/modelos
     environment:
