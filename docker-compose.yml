@@ -1,18 +1,18 @@
 name: "Detector_TBC_API"
 services:
-  trainer:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: detector_tbc_trainer
-    container_name: detector_tbc_trainer
-    command: python app/entrenamiento_modelos_tb_radiografias.py
-    volumes:
-      - ./datos/TB_Chest_Radiography_Database:/app/datos/TB_Chest_Radiography_Database:ro
-      - ./app/modelos:/app/app/modelos
-    environment:
-      - DATOS_PATH=/app/datos/TB_Chest_Radiography_Database
-      - MODEL_OUT=/app/app/modelos
+#  trainer:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    image: detector_tbc_trainer
+#    container_name: detector_tbc_trainer
+#    command: python app/entrenamiento_modelos_tb_radiografias.py
+#    volumes:
+#      - ./datos/TB_Chest_Radiography_Database:/app/datos/TB_Chest_Radiography_Database:ro
+#      - ./app/modelos:/app/app/modelos
+#    environment:
+#      - DATOS_PATH=/app/datos/TB_Chest_Radiography_Database
+#      - MODEL_OUT=/app/app/modelos
 
   api:
     build:
