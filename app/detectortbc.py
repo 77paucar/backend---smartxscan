@@ -6,8 +6,8 @@ from tensorflow.keras.preprocessing.image import img_to_array
 import os
 import time  # Para medir el tiempo
 
-MODELO1_PATH = "modelos/modelo1_radiografias_vs_otros.h5"
-MODELO2_PATH = "modelos/modelo2_clasificador_tb.h5"
+MODELO1_PATH = os.path.join(os.path.dirname(__file__), "modelos", "modelo1_radiografias_vs_otros.h5")
+MODELO2_PATH = os.path.join(os.path.dirname(__file__), "modelos", "modelo2_clasificador_tb.h5")
 TAMANO_IMAGEN = (224, 224)
 
 PENETRACION_OPTIMA_MIN = 80
