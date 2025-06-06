@@ -26,4 +26,5 @@ services:
       - ./app/modelos:/app/app/modelos
     environment:
       - DATOS_PATH=/app/datos/TB_Chest_Radiography_Database
-      - MODEL_OUT=/app/app/modelos
+      - MODELO1_URL=https://firebasestorage.googleapis.com/v0/b/react-web-c4127.appspot.com/o/modelos%2Fmodelo1_radiografias_vs_otros.h5?alt=media&token=763b6cb6-5622-4a98-b086-0df70fcf88c6
+      - MODELO2_URL=https://firebasestorage.googleapis.com/v0/b/react-web-c4127.appspot.com/o/modelos%2Fmodelo2_clasificador_tb.h5?alt=media&token=9629016d-4671-413a-a631-c98ba855ee92

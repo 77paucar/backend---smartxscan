@@ -5,9 +5,15 @@ from tensorflow.keras.preprocessing.image import img_to_array
 
 import os
 import time  # Para medir el tiempo
+import tempfile
+import urllib.parse
 
-MODELO1_PATH = os.path.join(os.path.dirname(__file__), "modelos", "modelo1_radiografias_vs_otros.h5")
-MODELO2_PATH = os.path.join(os.path.dirname(__file__), "modelos", "modelo2_clasificador_tb.h5")
+# MODELO1_PATH = os.path.join(os.path.dirname(__file__), "modelos", "modelo1_radiografias_vs_otros.h5")
+# MODELO2_PATH = os.path.join(os.path.dirname(__file__), "modelos", "modelo2_clasificador_tb.h5")
+
+MODELO1_URL = os.getenv("MODELO1_URL")
+MODELO2_URL = os.getenv("MODELO2_URL")
+
 TAMANO_IMAGEN = (224, 224)
 
 PENETRACION_OPTIMA_MIN = 80
@@ -17,14 +23,43 @@ CONTRASTE_MINIMO = 40
 
 class DetectorTBC:
     def __init__(self):
+        self.modelo1_local = self._descargar_desde_firebase(MODELO1_URL)
+        self.modelo2_local = self._descargar_desde_firebase(MODELO2_URL)
+        if not os.path.exists(self.modelo1_local) or not os.path.exists(self.modelo2_local):
+            raise FileNotFoundError("Uno o ambos modelos no fueron correctamente descargados.")
         try:
-            if not os.path.exists(MODELO1_PATH) or not os.path.exists(MODELO2_PATH):
-                raise FileNotFoundError("Uno o ambos modelos no fueron encontrados.")
-            self.modelo1 = load_model(MODELO1_PATH)
-            self.modelo2 = load_model(MODELO2_PATH)
+            self.modelo1 = load_model(self.modelo1_local)
+            self.modelo2 = load_model(self.modelo2_local)
         except Exception as e:
             print(f"[ERROR] No se pudo cargar los modelos: {str(e)}")
             raise
+
+
+    def _descargar_desde_firebase(self, url: str) -> str:
+        parsed = urllib.parse.urlparse(url)
+        nombre_archivo = os.path.basename(parsed.path)
+        if not nombre_archivo.endswith(".h5"):
+            nombre_archivo = f"{nombre_archivo}.h5"
+
+        destino = os.path.join(tempfile.gettempdir(), nombre_archivo)
+
+        if os.path.exists(destino) and os.path.getsize(destino) > 0:
+            return destino
+
+        try:
+            response = requests.get(url, stream=True)
+            response.raise_for_status()
+            with open(destino, "wb") as f:
+                for bloque in response.iter_content(chunk_size=1024 * 1024):
+                    if bloque:
+                        f.write(bloque)
+        except Exception as e:
+            raise RuntimeError(f"No se pudo descargar el modelo desde {url}: {e}")
+
+        if not os.path.exists(destino) or os.path.getsize(destino) == 0:
+            raise RuntimeError(f"El archivo descargado {destino} está vacío o no existe.")
+
+        return destino
 
 
     def _analizar_penetracion(self, img_gris):
