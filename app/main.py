@@ -7,9 +7,8 @@ from app.detectortbc import DetectorTBC
 app = FastAPI()
 
 origins = [
-    "https://detector-tbc-api.strategyec.com",
-    # "http://54.198.254.35",
-    # "http://ec2-54-198-254-35.compute-1.amazonaws.com"
+    "*",
+    # "https://detector-tbc-api.strategyec.com",
 ]
 
 app.add_middleware(
